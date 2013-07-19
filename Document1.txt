@@ -1,0 +1,44 @@
+    ' dgp rev 1/26/07 VMS User Info
+    Private m_username As String
+    Public Property VMSUser() As String
+        Get
+            Return m_username
+        End Get
+        Set(ByVal value As String)
+            m_username = value
+        End Set
+    End Property
+
+    ' dgp rev 1/26/07 VMS Authenticated User Info
+    Private m_Authname As String
+    Public Property VMSAuth() As String
+        Get
+            Return m_Authname
+        End Get
+        Set(ByVal value As String)
+            m_Authname = value
+        End Set
+    End Property
+
+    ' dgp rev 1/26/07 VMS User Info
+    Private m_userWord As String
+    Public Property VMSPassWord() As String
+        Get
+            Return m_userWord
+        End Get
+        Set(ByVal value As String)
+            m_userWord = value
+        End Set
+    End Property
+
+    ' dgp rev 1/26/07 VMS Authenticated User Info
+    Private m_AuthWord As String
+    Public Property VMSAuthPassword() As String
+        Get
+            Return m_AuthWord
+        End Get
+        Set(ByVal value As String)
+            m_AuthWord = value
+        End Set
+    End Property
+

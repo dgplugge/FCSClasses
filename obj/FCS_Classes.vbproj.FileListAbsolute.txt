@@ -1,0 +1,108 @@
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\FCS_Classes.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\FCS_Classes.pdb
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\FCS_Classes.xml
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\HelperClasses.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\Microsoft.Office.Interop.PowerPoint.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\office.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\Interop.Scripting.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\Microsoft.Vbe.Interop.dll
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\HelperClasses.pdb
+F:\Coding\Projects 080717\FCS_Classes\bin\Debug\HelperClasses.xml
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\ResolveAssemblyReference.cache
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\Interop.Scripting.dll
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.Resources.resources
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.dll
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.xml
+F:\Coding\Projects 080717\FCS_Classes\obj\Debug\FCS_Classes.pdb
+F:\Coding\Projects\FCS_Classes\bin\Release\FCS_Classes.dll
+F:\Coding\Projects\FCS_Classes\bin\Release\FCS_Classes.pdb
+F:\Coding\Projects\FCS_Classes\bin\Release\FCS_Classes.xml
+F:\Coding\Projects\FCS_Classes\bin\Release\HelperClasses.dll
+F:\Coding\Projects\FCS_Classes\bin\Release\Interop.Scripting.dll
+F:\Coding\Projects\FCS_Classes\bin\Release\HelperClasses.pdb
+F:\Coding\Projects\FCS_Classes\bin\Release\HelperClasses.xml
+F:\Coding\Projects\FCS_Classes\obj\Release\ResolveAssemblyReference.cache
+F:\Coding\Projects\FCS_Classes\obj\Release\Interop.Scripting.dll
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.Resources.resources
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.dll
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.xml
+F:\Coding\Projects\FCS_Classes\obj\Release\FCS_Classes.pdb
+F:\Coding\Projects\FCS_Classes\obj\Debug\ResolveAssemblyReference.cache
+F:\Coding\Projects\FCS_Classes\obj\Debug\Interop.Scripting.dll
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.Resources.resources
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Coding\Projects\FCS_Classes\bin\Debug\FCS_Classes.dll
+F:\Coding\Projects\FCS_Classes\bin\Debug\FCS_Classes.pdb
+F:\Coding\Projects\FCS_Classes\bin\Debug\FCS_Classes.xml
+F:\Coding\Projects\FCS_Classes\bin\Debug\HelperClasses.dll
+F:\Coding\Projects\FCS_Classes\bin\Debug\Interop.Scripting.dll
+F:\Coding\Projects\FCS_Classes\bin\Debug\HelperClasses.pdb
+F:\Coding\Projects\FCS_Classes\bin\Debug\HelperClasses.xml
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.dll
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.xml
+F:\Coding\Projects\FCS_Classes\obj\Debug\FCS_Classes.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\FCS_Classes.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\FCS_Classes.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\FCS_Classes.xml
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\HelperClasses.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\Interop.Scripting.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\HelperClasses.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Release\HelperClasses.xml
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\ResolveAssemblyReference.cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\Interop.Scripting.dll
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.Resources.resources
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.dll
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.xml
+F:\Coding\Development\Projects\FCS_Classes\obj\Release\FCS_Classes.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\FCS_Classes.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\FCS_Classes.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\FCS_Classes.xml
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\HelperClasses.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\Interop.Scripting.dll
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\HelperClasses.pdb
+F:\Coding\Development\Projects\FCS_Classes\bin\Debug\HelperClasses.xml
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\ResolveAssemblyReference.cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\Interop.Scripting.dll
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.Resources.resources
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.dll
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.xml
+F:\Coding\Development\Projects\FCS_Classes\obj\Debug\FCS_Classes.pdb
+F:\Software\FCS_Classes\bin\Release\FCS_Classes.dll
+F:\Software\FCS_Classes\bin\Release\FCS_Classes.pdb
+F:\Software\FCS_Classes\bin\Release\FCS_Classes.xml
+F:\Software\FCS_Classes\bin\Release\HelperClasses.dll
+F:\Software\FCS_Classes\bin\Release\HelperClasses.pdb
+F:\Software\FCS_Classes\bin\Release\HelperClasses.xml
+F:\Software\FCS_Classes\bin\Release\Interop.Scripting.dll
+F:\Software\FCS_Classes\obj\Release\ResolveAssemblyReference.cache
+F:\Software\FCS_Classes\obj\Release\Interop.Scripting.dll
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.Resources.resources
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.dll
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.xml
+F:\Software\FCS_Classes\obj\Release\FCS_Classes.pdb
+F:\Software\FCS_Classes\bin\Debug\FCS_Classes.dll
+F:\Software\FCS_Classes\bin\Debug\FCS_Classes.pdb
+F:\Software\FCS_Classes\bin\Debug\FCS_Classes.xml
+F:\Software\FCS_Classes\bin\Debug\HelperClasses.dll
+F:\Software\FCS_Classes\bin\Debug\HelperClasses.pdb
+F:\Software\FCS_Classes\bin\Debug\HelperClasses.xml
+F:\Software\FCS_Classes\bin\Debug\Interop.Scripting.dll
+F:\Software\FCS_Classes\obj\Debug\ResolveAssemblyReference.cache
+F:\Software\FCS_Classes\obj\Debug\Interop.Scripting.dll
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.vbproj.ResolveComReference.cache
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.Resources.resources
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.vbproj.GenerateResource.Cache
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.dll
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.xml
+F:\Software\FCS_Classes\obj\Debug\FCS_Classes.pdb

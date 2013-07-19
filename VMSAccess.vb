@@ -1,0 +1,1091 @@
+' Name:     Class for accessing the VMS server
+' Author:   Donald G Plugge
+' Date:     1/26/07
+' Purpose:  The VMS environment require special access needs,
+'           which this class provides.
+' Purpose:  Class to provide the FTP interface for file transfer between
+' VMS and PC.
+' This class permits you to perform direct connections to FTP sites in Visual Basic. NET.
+' The class supports the following FTP commands:
+'   - Upload a file
+'   - Download a file
+'   - Create a directory
+'   - Remove a directory
+'   - Change directory
+'   - Remove a file
+'   - Rename a file
+'   - Set the user name of the remote user
+'   - Set the password of the remote user
+
+Imports System
+Imports System.Net
+Imports System.IO
+Imports System.Text
+Imports System.Net.Sockets
+
+Public Class VMSAccess
+
+#Region "Class Variable Declarations"
+    ' dgp rev 1/26/07 VMS User Info
+    Private m_remote_users As ArrayList
+    Public Property Remote_Users() As ArrayList
+        Get
+            Return m_remote_users
+        End Get
+        Set(ByVal value As ArrayList)
+            m_remote_users = value
+        End Set
+    End Property
+
+    Private m_remote_runs As ArrayList
+    Public Property Remote_Runs() As ArrayList
+        Get
+            Return m_remote_runs
+        End Get
+        Set(ByVal Value As ArrayList)
+            m_remote_runs = Value
+        End Set
+    End Property
+
+    ' dgp rev 5/17/06 authenticate the connection
+    Private m_validated As Boolean = False
+    Public ReadOnly Property Validated() As Boolean
+        Get
+            Return m_validated
+        End Get
+    End Property
+
+    ' dgp rev 5/17/06 authenticate the connection
+    Public Function authenticate() As Boolean
+
+        '        ff = UserEnv.Get_FF()
+        If (Validated) Then Return True
+
+        Console.WriteLine("Attempting to connect..." + vbCrLf)
+        'Try to log on to the FTP server.
+        Return Login()
+
+    End Function
+
+    Private m_sRemoteHost, m_sRemotePath, m_sRemoteUser As String
+    Private m_sRemotePassword, m_sMess As String
+    Private m_iRemotePort, m_iBytes As Int32
+    Private m_objClientSocket As Socket
+
+    Private m_iRetValue As Int32
+    Private m_bLoggedIn As Boolean
+    Private m_sMes, m_sReply As String
+
+    Private m_auth_user As String
+    Private m_auth_pass As String
+
+    'Set the size of the packet that is used to read and to write data to the FTP server
+    'to the following specified size.
+    Public Const BLOCK_SIZE As Integer = 512
+    Private m_aBuffer(BLOCK_SIZE) As Byte
+    Private ASCII As Encoding = Encoding.ASCII
+    Public flag_bool As Boolean
+    'General variable declaration
+    Private m_sMessageString As String
+#End Region
+    Public Delegate Sub Event_NewVantageRunHand(ByVal info As Object)
+    Public Event Event_NewVantageRun As Event_NewVantageRunHand
+    Public Delegate Sub Event_VantageRunsHand(ByVal info As Object)
+    Public Event Event_VantageRuns As Event_VantageRunsHand
+    Public Delegate Sub Event_VantageFilesHand(ByVal info As Object)
+    Public Event Event_VantageFiles As Event_VantageFilesHand
+    Public Delegate Sub Event_MAPUsersHand(ByVal info As Object)
+    Public Event Event_MAPUsers As Event_MAPUsersHand
+
+    ' dgp rev 12/11/08 VMS Users List
+    Private mCurUser As String
+    Public Property CurUser() As String
+        Get
+            Return mCurUser
+        End Get
+        Set(ByVal value As String)
+            mCurUser = value
+        End Set
+    End Property
+
+    ' dgp rev 12/11/08 VMS Users List
+    Private Shared mVMSUsers As ArrayList
+    Public Shared ReadOnly Property VMSUsers() As ArrayList
+        Get
+            Return mVMSUsers
+        End Get
+    End Property
+
+    ' dgp rev 12/11/08 VMS User Run List
+    Private mRunList As ArrayList
+    Public ReadOnly Property RunList() As ArrayList
+        Get
+            Return mRunList
+        End Get
+    End Property
+
+    ' dgp rev 12/11/08 VMS Web Interface
+    Private Shared mWB As Windows.Forms.WebBrowser
+
+    ' dgp rev 12/11/08 VMS Web Info
+    Private Shared mInfo As Collection
+    Public Shared ReadOnly Property Info() As Collection
+        Get
+            Return mInfo
+        End Get
+    End Property
+
+#Region "Class Constructors"
+
+    ' Main class constructor
+    Public Sub New()
+        m_sRemoteHost = "spiffy.nci.nih.gov"
+        m_sRemotePath = "."
+        m_sRemoteUser = "cellquest"
+        m_sRemotePassword = "scatter"
+        m_sMessageString = ""
+        m_iRemotePort = 21
+        m_bLoggedIn = False
+    End Sub
+
+    ' Parameterized constructor
+    Public Sub New(ByVal sRemoteHost As String, _
+                   ByVal sRemotePath As String, _
+                   ByVal sRemoteUser As String, _
+                   ByVal sRemotePassword As String, _
+                   ByVal iRemotePort As Int32)
+        m_sRemoteHost = sRemoteHost
+        m_sRemotePath = sRemotePath
+        m_sRemoteUser = sRemoteUser
+        m_sRemotePassword = sRemotePassword
+        m_sMessageString = ""
+        m_iRemotePort = 21
+        m_bLoggedIn = False
+    End Sub
+#End Region
+
+#Region "Public Properties"
+
+    'Set or Get the name of the FTP server that you want to connect to.
+    Public Property RemoteHostFTPServer() As String
+        'Get the name of the FTP server.
+        Get
+            Return m_sRemoteHost
+        End Get
+        'Set the name of the FTP server.
+        Set(ByVal Value As String)
+            m_sRemoteHost = Value
+        End Set
+    End Property
+
+    'Get the name of the last successful connection to the FTP server.
+    Public ReadOnly Property Auth_User() As String
+        'Get the name of the last successful connection to the FTP server.
+        Get
+            Return m_auth_user
+        End Get
+        'Set the name of the last successful connection
+        'using the login method.
+    End Property
+    'Get the name of the last successful connection to the FTP server.
+    Public ReadOnly Property Auth_Pass() As String
+        'Get the name of the last successful connection to the FTP server.
+        Get
+            Return m_auth_pass
+        End Get
+        'Set the password of the last successful connection
+        'using the login method.
+    End Property
+    'Set or Get the FTP port number of the FTP server that you want to connect to.
+    Public Property RemotePort() As Int32
+        'Get the FTP port number.
+        Get
+            Return m_iRemotePort
+        End Get
+        'Set the FTP port number.
+        Set(ByVal Value As Int32)
+            m_iRemotePort = Value
+
+        End Set
+    End Property
+
+    'Set or Get the remote path of the FTP server that you want to connect to.
+    Public Property RemotePath() As String
+        'Get the remote path.
+        Get
+            Return m_sRemotePath
+        End Get
+        'Set the remote path.
+        Set(ByVal Value As String)
+            m_sRemotePath = Value
+        End Set
+    End Property
+
+    'Set the remote password of the FTP server that you want to connect to.
+    Public Property RemotePassword() As String
+        Get
+            Return m_sRemotePassword
+        End Get
+        Set(ByVal Value As String)
+            m_sRemotePassword = Value
+        End Set
+    End Property
+
+    'Set or Get the remote user of the FTP server that you want to connect to.
+    Public Property RemoteUser() As String
+        Get
+            Return m_sRemoteUser
+        End Get
+        Set(ByVal Value As String)
+            m_sRemoteUser = Value
+        End Set
+    End Property
+
+    'Set the class messagestring.
+    Public Property MessageString() As String
+        Get
+            Return m_sMessageString
+        End Get
+        Set(ByVal Value As String)
+            m_sMessageString = Value
+        End Set
+    End Property
+
+#End Region
+
+#Region "Public Subs and Functions"
+
+    'Return a list of files from the file system. Return these files in a string() array.
+    Public Function GetFileList(ByVal sMask As String) As String()
+        Dim cSocket As Socket
+        Dim bytes As Int32
+        Dim seperator As Char = ControlChars.Lf
+        Dim mess() As String
+
+        m_sMes = ""
+        'Check to see if you are logged on to the FTP server.
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+
+        cSocket = CreateDataSocket()
+        'Send an FTP command.
+        SendCommand("NLST " & sMask)
+
+        If (Not (m_iRetValue = 150 Or m_iRetValue = 125)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        m_sMes = ""
+        Do While (True)
+            Array.Clear(m_aBuffer, 0, m_aBuffer.Length)
+            bytes = cSocket.Receive(m_aBuffer, m_aBuffer.Length, 0)
+            m_sMes += ASCII.GetString(m_aBuffer, 0, bytes)
+
+            If (bytes < m_aBuffer.Length) Then
+                Exit Do
+            End If
+        Loop
+
+        mess = m_sMes.Split(seperator)
+        cSocket.Close()
+        ReadReply()
+
+        If (m_iRetValue <> 226) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        Return mess
+    End Function
+
+    ' dgp rev 12/1/08 Submit an HTTP request for list of users
+    Public Sub Request_MAPUsers()
+
+        Dim NewURL1 As String = String.Format("http://spiffy.nci.nih.gov:8000/ncibin/USER_LIST.PL")
+
+        mWB = New Windows.Forms.WebBrowser
+        AddHandler mWB.DocumentCompleted, AddressOf Reply_MAPUsers
+        mWB.Navigate(NewURL1)
+
+    End Sub
+
+    ' dgp rev 12/1/08 Submit an HTTP request for list of users
+    Public Sub Request_NewVantageRun(ByVal user As String, ByVal run As String)
+
+        Dim NewURL1 As String = String.Format("http://spiffy.nci.nih.gov:8000/ncibin/NEW_RUN.PL?user={0}&run={1}", user, run)
+
+        mWB = New Windows.Forms.WebBrowser
+        AddHandler mWB.DocumentCompleted, AddressOf Reply_NewVantageRun
+        mWB.Navigate(NewURL1)
+
+    End Sub
+
+    ' dgp rev 12/1/08 Submit an HTTP request for list of users
+    Public Sub Request_VantageRuns(ByVal user As String)
+
+        Dim NewURL1 As String = String.Format("http://spiffy.nci.nih.gov:8000/ncibin/user_run_list.PL?user={0}", user)
+
+        mWB = New Windows.Forms.WebBrowser
+        AddHandler mWB.DocumentCompleted, AddressOf Reply_VantageRuns
+        mWB.Navigate(NewURL1)
+
+    End Sub
+
+    ' dgp rev 12/1/08 Submit an HTTP request for list of users
+    Public Sub Request_VantageFiles(ByVal user As String, ByVal run As String)
+
+        Dim NewURL1 As String = String.Format("http://spiffy.nci.nih.gov:8000/ncibin/user_files.PL?user={0}&run={1}", user, run)
+
+        mWB = New Windows.Forms.WebBrowser
+        AddHandler mWB.DocumentCompleted, AddressOf Reply_VantageFiles
+        mWB.Navigate(NewURL1)
+
+    End Sub
+    ' dgp rev 5/4/09 
+    Private Sub Parse_VantageRuns(ByVal sender As Object)
+
+        Dim item
+        mInfo = New Collection
+        mRunList = New ArrayList
+        For Each item In sender.document.all()
+            If (item.tagname().ToString = "SELECT") Then
+                Dim opt
+                For Each opt In item.children
+                    mRunList.Add(opt.innerhtml)
+                Next
+                mRunList.Sort()
+            End If
+            If (item.tagname().ToString = "INPUT") Then
+                mInfo.Add(item.domelement.value, item.domelement.name)
+            End If
+        Next
+
+    End Sub
+
+    ' dgp rev 12/1/08 User List Request complete
+    Private Sub Reply_VantageRuns(ByVal sender As Object, ByVal e As System.Windows.Forms.WebBrowserDocumentCompletedEventArgs)
+
+        Parse_VantageRuns(sender)
+
+        RemoveHandler mWB.DocumentCompleted, AddressOf Reply_VantageRuns
+        RaiseEvent Event_VantageRuns(RunList)
+
+    End Sub
+
+    Private Sub Parse_VantageFiles(ByVal sender As Object)
+
+        Dim item
+        mInfo = New Collection
+        mRunList = New ArrayList
+        For Each item In sender.document.all()
+            If (item.tagname().ToString = "SELECT") Then
+                Dim opt
+
+                For Each opt In item.children
+                    mRunList.Add(opt.innerhtml)
+                Next
+                mRunList.Sort()
+            End If
+            If (item.tagname().ToString = "INPUT") Then
+                mInfo.Add(item.domelement.value, item.domelement.name)
+            End If
+        Next
+
+    End Sub
+
+    ' dgp rev 12/1/08 User List Request complete
+    Private Sub Reply_VantageFiles(ByVal sender As Object, ByVal e As System.Windows.Forms.WebBrowserDocumentCompletedEventArgs)
+
+        Parse_VantageFiles(sender)
+
+        RemoveHandler mWB.DocumentCompleted, AddressOf Reply_VantageFiles
+        Dim info = RunList
+        RaiseEvent Event_VantageFiles(info)
+
+    End Sub
+
+    ' dgp rev 2/19/09 Parse the HTML of the results from VMS system
+    Private Shared Sub UserListHTMLParser(ByVal sender As Object)
+
+        Dim item
+        Dim child
+        mVMSUsers = New ArrayList
+        mInfo = New Collection
+        For Each item In sender.document.all()
+            If (item.tagname().ToString = "SELECT") Then
+                For Each child In item.children
+                    If (child.tagname().ToString = "OPTION") Then
+                        mVMSUsers.Add(child.domelement.value)
+                    End If
+                    mVMSUsers.Sort()
+                Next
+            End If
+            If (item.tagname().ToString = "INPUT") Then
+                mInfo.Add(item.domelement.value, item.domelement.name)
+            End If
+        Next
+
+    End Sub
+
+    Private mValidMap As Boolean
+    Private Shared mSkip As Integer ' skip lateral
+    Private Shared mTarget As String
+    ' moves lateral before a drop to child
+    Private Shared mMoves As ArrayList
+    Public Shared Property Moves() As ArrayList
+        Get
+            Return mMoves
+        End Get
+        Set(ByVal value As ArrayList)
+            mMoves = value
+        End Set
+    End Property
+
+    Public Shared mSearchTags As ArrayList
+    Public Shared mSearchVals As ArrayList
+
+    Private Shared taghash As Hashtable
+    Private Shared inhash As Hashtable
+    ' Recursive Search for Target
+    Public Shared Sub Search_Doc(ByVal DocEle As System.Windows.Forms.HtmlElementCollection)
+
+
+    End Sub
+
+    ' dgp rev 2/19/09 Parse the HTML of the results from VMS system
+    Private Shared Function NewRunHTMLParser(ByVal sender As Object) As Boolean
+
+        Dim val As Integer = 0
+        Try
+            Dim items = sender.document.all.GetElementsByName("status")
+            If (items.Count) Then val = CInt(items.Item(0).GetAttribute("value"))
+        Catch ex As Exception
+
+        End Try
+
+        Return (val = 1)
+
+    End Function
+
+    ' dgp rev 12/1/08 User List Request complete
+    Private Sub Reply_MAPUsers(ByVal sender As Object, ByVal e As System.Windows.Forms.WebBrowserDocumentCompletedEventArgs)
+
+        UserListHTMLParser(sender)
+
+        RemoveHandler mWB.DocumentCompleted, AddressOf Reply_MAPUsers
+        RaiseEvent Event_MAPUsers(VMSUsers)
+
+    End Sub
+
+    ' dgp rev 12/1/08 User List Request complete
+    Private Sub Reply_NewVantageRun(ByVal sender As Object, ByVal e As System.Windows.Forms.WebBrowserDocumentCompletedEventArgs)
+
+        RemoveHandler mWB.DocumentCompleted, AddressOf Reply_NewVantageRun
+
+        ' dgp rev 2/25/09 parse the HTTP data returned from VMS
+        Dim status = NewRunHTMLParser(sender)
+
+        ' trigger completion event
+        RaiseEvent Event_NewVantageRun(status)
+
+    End Sub
+
+    'Return a list of files from the file system. Return these files in a string() array.
+    Public Function GetVMSList(ByVal sMask As String) As String()
+        Dim cSocket As Socket
+        Dim bytes As Int32
+        Dim seperator As Char = vbCrLf
+        Dim mess() As String
+
+        m_sMes = ""
+        'Check to see if you are logged on to the FTP server.
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+
+        cSocket = CreateDataSocket()
+        'Send an FTP command.
+        SendCommand("NLST " & sMask)
+
+        If (Not (m_iRetValue = 150 Or m_iRetValue = 125)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+        Threading.Thread.Sleep(1000)
+        m_sMes = ""
+        Do While (True)
+            Array.Clear(m_aBuffer, 0, m_aBuffer.Length)
+            bytes = cSocket.Receive(m_aBuffer, m_aBuffer.Length, 0)
+            m_sMes += ASCII.GetString(m_aBuffer, 0, bytes)
+
+            If (bytes < m_aBuffer.Length) Then
+                Exit Do
+            End If
+        Loop
+
+        mess = m_sMes.Split(vbCrLf)
+        cSocket.Close()
+        ReadReply()
+
+        If (m_iRetValue <> 226) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        Return mess
+    End Function
+
+    ' Get the size of the file on the FTP server.
+    Public Function GetFileSize(ByVal sFileName As String) As Long
+        Dim size As Long
+
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command.
+        SendCommand("SIZE " & sFileName)
+        size = 0
+
+        If (m_iRetValue = 213) Then
+            size = Int64.Parse(m_sReply.Substring(4))
+        Else
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        Return size
+    End Function
+
+
+    'Log on to the FTP server.
+    Public Function Login() As Boolean
+
+        m_objClientSocket = _
+        New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+
+        Dim ep As New IPEndPoint(Dns.GetHostEntry(m_sRemoteHost).AddressList(0), m_iRemotePort)
+
+        Try
+            m_objClientSocket.Connect(ep)
+        Catch ex As Exception
+            MessageString = m_sReply
+            Throw New IOException("Cannot connect to the remote server")
+
+        End Try
+
+        ReadReply()
+        If (m_iRetValue <> 220) Then
+            CloseConnection()
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+        'Send an FTP command to send a user logon ID to the server.
+        SendCommand("USER " & m_sRemoteUser)
+        If (Not (m_iRetValue = 331 Or m_iRetValue = 230)) Then
+            Cleanup()
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        If (m_iRetValue <> 230) Then
+            'Send an FTP command to send a user logon password to the server.
+            SendCommand("PASS " & m_sRemotePassword)
+            If (Not (m_iRetValue = 230 Or m_iRetValue = 202)) Then
+                Cleanup()
+                MessageString = m_sReply
+                Throw New IOException(m_sReply.Substring(4))
+            End If
+        End If
+
+        m_bLoggedIn = True
+        m_validated = True
+        m_auth_user = m_sRemoteUser
+        m_auth_pass = m_sRemotePassword
+
+        'Call the ChangeDirectory user-defined function to change the directory to the
+        'remote FTP folder that is mapped.
+        ChangeDirectory(m_sRemotePath)
+
+        'Return the final result.
+        Return m_bLoggedIn
+    End Function
+
+    'If the value of mode is true, set binary mode for downloads. Otherwise, set ASCII mode.
+    Public Sub SetBinaryMode(ByVal bMode As Boolean)
+
+        If (bMode) Then
+            'Send the FTP command to set the binary mode.
+            '(TYPE is an FTP command that is used to specify representation type.)
+            SendCommand("TYPE I")
+        Else
+            'Send the FTP command to set ASCII mode.
+            '(TYPE is an FTP command that is used to specify representation type.)
+            SendCommand("TYPE A")
+        End If
+
+        If (m_iRetValue <> 200) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+    End Sub
+    ' Download a file to the local directory of the assembly. Keep the same file name.
+    Public Sub DownloadFile(ByVal sFileName As String)
+        DownloadFile(sFileName, "", False)
+    End Sub
+    ' Download a remote file to the local directory of the Assembly. Keep the same file name.
+    Public Sub DownloadFile(ByVal sFileName As String, _
+                            ByVal bResume As Boolean)
+        DownloadFile(sFileName, "", bResume)
+    End Sub
+    'Download a remote file to a local file name. You must include a path.
+    'The local file name will be created or will be overwritten, but the path must exist.
+    Public Sub DownloadFile(ByVal sFileName As String, _
+                            ByVal sLocalFileName As String)
+        DownloadFile(sFileName, sLocalFileName, False)
+    End Sub
+    ' Download a remote file to a local file name. You must include a path. Set the
+    ' resume flag. The local file name will be created or will be overwritten, but the path must exist.
+    Public Sub DownloadFile(ByVal sFileName As String, _
+                            ByVal sLocalFileName As String, _
+                            ByVal bResume As Boolean)
+        Dim st As Stream
+        Dim output As FileStream
+        Dim cSocket As Socket
+        Dim offset, npos As Long
+
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+
+        '        SetBinaryMode(True)
+
+        If (sLocalFileName.Equals("")) Then
+            sLocalFileName = sFileName
+        End If
+
+        If (Not (File.Exists(sLocalFileName))) Then
+            st = File.Create(sLocalFileName)
+            st.Close()
+        End If
+
+        output = New FileStream(sLocalFileName, FileMode.Open)
+        cSocket = CreateDataSocket()
+        offset = 0
+
+        If (bResume) Then
+            offset = output.Length
+
+            If (offset > 0) Then
+                'Send an FTP command to restart.
+                SendCommand("REST " & offset)
+                If (m_iRetValue <> 350) Then
+                    offset = 0
+                End If
+            End If
+
+            If (offset > 0) Then
+                npos = output.Seek(offset, SeekOrigin.Begin)
+            End If
+        End If
+        'Send an FTP command to retrieve a file.
+        SendCommand("RETR " & sFileName)
+
+        If (Not (m_iRetValue = 150 Or m_iRetValue = 125)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        Do While (True)
+            Array.Clear(m_aBuffer, 0, m_aBuffer.Length)
+            m_iBytes = cSocket.Receive(m_aBuffer, m_aBuffer.Length, 0)
+            output.Write(m_aBuffer, 0, m_iBytes)
+
+            If (m_iBytes <= 0) Then
+                Exit Do
+            End If
+        Loop
+
+        output.Close()
+        If (cSocket.Connected) Then
+            cSocket.Close()
+        End If
+
+        ReadReply()
+        If (Not (m_iRetValue = 226 Or m_iRetValue = 250)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+    End Sub
+    'This is a function that is used to upload a file from your local hard disk to your FTP site.
+    Public Sub UploadFile(ByVal sFileName As String)
+        UploadFile(sFileName, False)
+    End Sub
+    ' This is a function that is used to upload a file from your local hard disk to your FTP site
+    ' and then set the resume flag.
+    Public Sub UploadFile(ByVal sFileName As String, _
+                          ByVal bResume As Boolean)
+        Dim cSocket As Socket
+        Dim offset As Long
+        Dim input As FileStream
+        Dim bFileNotFound As Boolean
+
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+
+        cSocket = CreateDataSocket()
+        offset = 0
+
+        If (bResume) Then
+            Try
+                SetBinaryMode(True)
+                offset = GetFileSize(sFileName)
+            Catch ex As Exception
+                offset = 0
+            End Try
+        End If
+
+        If (offset > 0) Then
+            SendCommand("REST " & offset)
+            If (m_iRetValue <> 350) Then
+
+                'The remote server may not support resuming.
+                offset = 0
+            End If
+        End If
+        'Send an FTP command to store a file.
+        SendCommand("STOR " & Path.GetFileName(sFileName))
+        If (Not (m_iRetValue = 125 Or m_iRetValue = 150)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        'Check to see if the file exists before the upload.
+        bFileNotFound = False
+        If (File.Exists(sFileName)) Then
+            ' Open the input stream to read the source file.
+            input = New FileStream(sFileName, FileMode.Open)
+            If (offset <> 0) Then
+                input.Seek(offset, SeekOrigin.Begin)
+            End If
+
+            'Upload the file.
+            m_iBytes = input.Read(m_aBuffer, 0, m_aBuffer.Length)
+            Do While (m_iBytes > 0)
+                cSocket.Send(m_aBuffer, m_iBytes, 0)
+                m_iBytes = input.Read(m_aBuffer, 0, m_aBuffer.Length)
+            Loop
+            input.Close()
+        Else
+            bFileNotFound = True
+        End If
+
+        If (cSocket.Connected) Then
+            cSocket.Close()
+        End If
+
+        'Check the return value if the file was not found.
+        If (bFileNotFound) Then
+            MessageString = m_sReply
+            Throw New IOException("The file: " & sFileName & " was not found. " & _
+           "Cannot upload the file to the FTP site")
+        End If
+
+        ReadReply()
+        If (Not (m_iRetValue = 226 Or m_iRetValue = 250)) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+    End Sub
+    ' Delete a file from the remote FTP server.
+    Public Function DeleteFile(ByVal sFileName As String) As Boolean
+        Dim bResult As Boolean
+
+        bResult = True
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command to delete a file.
+        SendCommand("DELE " & sFileName)
+        If (m_iRetValue <> 250) Then
+            bResult = False
+            MessageString = m_sReply
+        End If
+
+        ' Return the final result.
+        Return bResult
+    End Function
+    ' Rename a file on the remote FTP server.
+    Public Function RenameFile(ByVal sOldFileName As String, _
+                               ByVal sNewFileName As String) As Boolean
+        Dim bResult As Boolean
+
+        bResult = True
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command to rename from a file.
+        SendCommand("RNFR " & sOldFileName)
+        If (m_iRetValue <> 350) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        'Send an FTP command to rename a file to a new file name.
+        'It will overwrite if newFileName exists.
+        SendCommand("RNTO " & sNewFileName)
+        If (m_iRetValue <> 250) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+        ' Return the final result.
+        Return bResult
+    End Function
+
+    'This is a function that is used to create a directory on the remote FTP server.
+    Public Function CreateDirectory(ByVal sDirName As String) As Boolean
+        Dim bResult As Boolean
+
+        bResult = True
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command to make directory on the FTP server.
+        SendCommand("MKD " & sDirName)
+        If (m_iRetValue <> 257) Then
+            bResult = False
+            MessageString = m_sReply
+        End If
+
+        ' Return the final result.
+        Return bResult
+    End Function
+    ' This is a function that is used to delete a directory on the remote FTP server.
+    Public Function RemoveDirectory(ByVal sDirName As String) As Boolean
+        Dim bResult As Boolean
+
+        bResult = True
+        'Check if logged on to the FTP server
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command to remove directory on the FTP server.
+        SendCommand("RMD " & sDirName)
+        If (m_iRetValue <> 250) Then
+            bResult = False
+            MessageString = m_sReply
+        End If
+
+        ' Return the final result.
+        Return bResult
+    End Function
+    'This is a function that is used to change the current working directory on the remote FTP server.
+    Public Function ChangeDirectory(ByVal sDirName As String) As Boolean
+        Dim bResult As Boolean
+
+        bResult = True
+        'Check if you are in the root directory.
+        If (sDirName.Equals(".")) Then
+            Exit Function
+        End If
+        'Check if logged on to the FTP server
+        If (Not (m_bLoggedIn)) Then
+            Login()
+        End If
+        'Send an FTP command to change directory on the FTP server.
+        SendCommand("CWD " & sDirName)
+        If (m_iRetValue <> 250) Then
+            bResult = False
+            MessageString = m_sReply
+        End If
+
+        Me.m_sRemotePath = sDirName
+
+        ' Return the final result.
+        Return bResult
+    End Function
+    ' Close the FTP connection of the remote server.
+    Public Sub CloseConnection()
+        If (Not (m_objClientSocket Is Nothing)) Then
+            'Send an FTP command to end an FTP server system.
+            SendCommand("QUIT")
+        End If
+
+        Cleanup()
+    End Sub
+
+#End Region
+
+#Region "Private Subs and Functions"
+    ' Read the reply from the FTP server.
+    Private Sub ReadReply()
+        m_sMes = ""
+        m_sReply = ReadLine()
+        m_iRetValue = Int32.Parse(m_sReply.Substring(0, 3))
+    End Sub
+
+    ' Clean up some variables.
+    Private Sub Cleanup()
+        If Not (m_objClientSocket Is Nothing) Then
+            m_objClientSocket.Close()
+            m_objClientSocket = Nothing
+        End If
+
+        m_bLoggedIn = False
+    End Sub
+    ' Read a line from the FTP server.
+    Private Function ReadLine(Optional ByVal bClearMes As Boolean = False) As String
+        Dim seperator As Char = ControlChars.Lf
+        Dim mess() As String
+
+        If (bClearMes) Then
+            m_sMes = ""
+        End If
+        Do While (True)
+            Array.Clear(m_aBuffer, 0, BLOCK_SIZE)
+            m_iBytes = m_objClientSocket.Receive(m_aBuffer, m_aBuffer.Length, 0)
+            m_sMes += ASCII.GetString(m_aBuffer, 0, m_iBytes)
+            If (m_iBytes < m_aBuffer.Length) Then
+                Exit Do
+            End If
+        Loop
+
+        mess = m_sMes.Split(seperator)
+        If (m_sMes.Length > 2) Then
+            m_sMes = mess(mess.Length - 2)
+        Else
+            m_sMes = mess(0)
+        End If
+
+        If (Not (m_sMes.Substring(3, 1).Equals(" "))) Then
+            Return ReadLine(True)
+        End If
+
+        Return m_sMes
+    End Function
+    ' This is a function that is used to send a command to the FTP server that you are connected to.
+    Private Sub SendCommand(ByVal sCommand As String)
+        sCommand = sCommand & ControlChars.CrLf
+        Dim cmdbytes As Byte() = ASCII.GetBytes(sCommand)
+        m_objClientSocket.Send(cmdbytes, cmdbytes.Length, 0)
+        ReadReply()
+    End Sub
+    ' Create a data socket.
+    Private Function CreateDataSocket() As Socket
+        Dim index1, index2, len As Int32
+        Dim partCount, i, port As Int32
+        Dim ipData, buf, ipAddress As String
+        Dim parts(6) As Int32
+        Dim ch As Char
+        Dim s As Socket
+        Dim ep As IPEndPoint
+        'Send an FTP command to use passive data connection.
+        SendCommand("PASV")
+        If (m_iRetValue <> 227) Then
+            MessageString = m_sReply
+            Throw New IOException(m_sReply.Substring(4))
+        End If
+
+        index1 = m_sReply.IndexOf("(")
+        index2 = m_sReply.IndexOf(")")
+        ipData = m_sReply.Substring(index1 + 1, index2 - index1 - 1)
+
+        len = ipData.Length
+        partCount = 0
+        buf = ""
+
+        For i = 0 To ((len - 1) And partCount <= 6)
+            ch = Char.Parse(ipData.Substring(i, 1))
+            If (Char.IsDigit(ch)) Then
+                buf += ch
+            ElseIf (ch <> ",") Then
+                MessageString = m_sReply
+                Throw New IOException("Malformed PASV reply: " & m_sReply)
+            End If
+
+            If ((ch = ",") Or (i + 1 = len)) Then
+                Try
+                    parts(partCount) = Int32.Parse(buf)
+                    partCount += 1
+                    buf = ""
+                Catch ex As Exception
+                    MessageString = m_sReply
+                    Throw New IOException("Malformed PASV reply: " & m_sReply)
+                End Try
+            End If
+        Next
+
+        ipAddress = parts(0) & "." & parts(1) & "." & parts(2) & "." & parts(3)
+
+        ' Make this call in Visual Basic .NET 2002. You want to
+        ' bitshift the number by 8 bits. In Visual Basic .NET 2002 you must
+        ' multiply the number by 2 to the power of 8.
+        'port = parts(4) * (2 ^ 8)
+
+        ' Make this call and then comment out the previous line for Visual Basic .NET 2003.
+        port = parts(4) << 8
+
+        ' Determine the data port number.
+        port = port + parts(5)
+
+        s = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+        ep = New IPEndPoint(Dns.GetHostEntry(ipAddress).AddressList(0), port)
+
+        Try
+            s.Connect(ep)
+        Catch ex As Exception
+            MessageString = m_sReply
+            Throw New IOException("Cannot connect to remote server.")
+            'If you cannot connect to the FTP server that is
+            'specified, make the boolean variable false.
+            flag_bool = False
+        End Try
+        'If you can connect to the FTP server that is specified, make the boolean variable true.
+        flag_bool = True
+        Return s
+    End Function
+
+    ' dgp rev 4/14/06 access the server and scan the directory to 
+    ' retrieve a file list
+    Public Function get_runs(ByVal user As String) As Boolean
+
+        Console.WriteLine("Attempting to connect..." + vbCrLf)
+        'Try to log on to the FTP server.
+        If (Login() = True) Then
+
+            Console.WriteLine("Login Successful" + vbCrLf)
+            'Get the current directory listing.
+            Dim runs As String() = GetVMSList("xyzzy_disks:[facstar1.list_data." + user + "]*.DIR")
+            'Successful changing the directory
+            Console.WriteLine("List Retrieved" + vbCrLf)
+            Dim item As String
+            Dim len As Integer
+            Dim pos As Integer
+            Dim name As String
+            Remote_Runs = New ArrayList
+            For Each item In runs
+                pos = item.IndexOf("]")
+                len = item.IndexOf(".DIR")
+                If (len * pos <> 1) Then
+                    name = item.Substring(pos + 1, len - pos - 1)
+                    If (Not Remote_Runs.Contains(name)) Then Remote_Runs.Add(name)
+                End If
+            Next
+            Remote_Runs.Sort()
+            Return True
+        Else
+            'Unsuccessful changing the directory
+            Console.WriteLine("Unable to change to the directory that was specified" + vbCrLf)
+        End If
+        Return False
+
+    End Function
+
+
+
+#End Region
+
+End Class
